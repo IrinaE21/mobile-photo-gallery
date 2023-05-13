@@ -8,6 +8,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.bignerdranch.android.photogallery23.api.FlickrApi
 import com.bignerdranch.android.photogallery23.api.FlickrResponse
+import com.bignerdranch.android.photogallery23.api.PhotoInterceptor
+import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -16,13 +18,19 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 private const val TAG = "FlickrFetchr"
+
 class FlickrFetchr {
     private val flickrApi: FlickrApi
+
     init {
+        val client = OkHttpClient.Builder()
+            .addInterceptor(PhotoInterceptor())
+            .build()
         val retrofit: Retrofit = Retrofit.Builder()
-                .baseUrl("https://api.flickr.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
+            .baseUrl("https://api.flickr.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
+            .build()
         flickrApi =
             retrofit.create(FlickrApi::class.java)
 
@@ -35,6 +43,7 @@ class FlickrFetchr {
             override fun onFailure(call: Call<FlickrResponse>, t: Throwable) {
                 Log.e(TAG, "Failed to fetch photos", t)
             }
+
             override fun onResponse(
                 call: Call<FlickrResponse>, response: Response<FlickrResponse>
             ) {
@@ -43,10 +52,10 @@ class FlickrFetchr {
                 val photoResponse:
                         PhotoResponse? = flickrResponse?.photos
                 var galleryItems:
-                        List<GalleryItem> = photoResponse?.galleryItems?: mutableListOf()
+                        List<GalleryItem> = photoResponse?.galleryItems ?: mutableListOf()
                 galleryItems = galleryItems.filterNot {
-                        it.url.isBlank()
-                    }
+                    it.url.isBlank()
+                }
                 responseLiveData.value = galleryItems
 
             }
@@ -60,8 +69,10 @@ class FlickrFetchr {
             flickrApi.fetchUrlBytes(url).execute()
         val bitmap =
             response.body()?.byteStream()?.use(BitmapFactory::decodeStream)
-        Log.i(TAG,
-            "Decoded bitmap=$bitmap from Response=$response")
+        Log.i(
+            TAG,
+            "Decoded bitmap=$bitmap from Response=$response"
+        )
         return bitmap
     }
 

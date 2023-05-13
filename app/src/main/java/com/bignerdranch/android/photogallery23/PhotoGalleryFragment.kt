@@ -24,9 +24,10 @@ class PhotoGalleryFragment : Fragment() {
     private lateinit var photoGalleryViewModel: PhotoGalleryViewModel
 
     private lateinit var photoRecyclerView: RecyclerView
-    override fun onCreate(savedInstanceState:
-                          Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        retainInstance = true
 
         photoGalleryViewModel = ViewModelProviders.of(this).get(PhotoGalleryViewModel::class.java)
 
